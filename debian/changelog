@@ -1,3 +1,31 @@
+tinyscheme (1.40.svn.2012.12.14-1) unstable; urgency=low
+
+  * Hijack package.
+  * Update Debian packaging scripts
+    - add watch file from qa.debian.org
+    - source format 3.0
+    - move upstream mods to debian/patches/
+    - dh 9
+    - add self to uploaders
+    - bump policy version (no changes required)
+    - add pointer to upstream svn repo to debian/copyright
+    - add homepage field
+    - add vcs fields
+  * New upstream version.
+    - forward port debian patches through dos2unix hassles
+    - patch to scheme.c obsoleted by upstream mods, remove
+  * Address lintian man page hyphen dash slash concerns
+  * Migrate man page installation from makefile patch to debian/manpages
+  * Write and engage custom debian/Makefile that uses implicit rules thus
+    allowing hardening flags to flow via the default mechanisms.
+  * Migrate #define tweaks from scheme.h patch to debian/Makefile.
+  * Remove -fpic from debian/Makefile: not building shared library.
+  * Merge with upstream development snapshot.
+    - Trunk of upstream svn repo, commit date 14-Dec-2014.
+    - Consists almost entirely of bug fixes.
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 19 Feb 2013 14:39:02 +0000
+
 tinyscheme (1.37-3.1) unstable; urgency=medium
 
   * Non-maintainer upload.
