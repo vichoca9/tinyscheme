@@ -1,0 +1,4 @@
+  * Non-maintainer upload.
+  * Fix "ftbfs with GCC-5": add patch from Nicholas Luedtke:
+    Removed inline from function signatures to work with test cases.
+    (Closes: #778146)
