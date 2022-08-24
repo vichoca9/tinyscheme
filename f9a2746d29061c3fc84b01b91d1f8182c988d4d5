@@ -1,0 +1,12 @@
+  [ Ondřej Nový ]
+  * d/control: Set Vcs-* to salsa.debian.org
+  [ Barak A. Pearlmutter ]
+  * Trim trailing whitespace.
+  * Use secure URI in debian/watch.
+  * Bump debhelper from old 10 to 13.
+  * Set debhelper-compat version in Build-Depends.
+  * New upstream release
+  * Merge upstream changes
+  * Bump policy
+  * Rules-Requires-Root: no
+  * non-build-breaking typo in debian/rules
