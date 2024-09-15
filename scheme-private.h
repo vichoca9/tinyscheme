@@ -3,6 +3,8 @@
 #ifndef _SCHEME_PRIVATE_H
 #define _SCHEME_PRIVATE_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "scheme.h"
 /*------------------ Ugly internals -----------------------------------*/
 /*------------------ Of interest only to FFI users --------------------*/
@@ -39,7 +41,7 @@ typedef struct port {
     } string;
   } rep;
 #ifdef USE_READLINE
-  char * ln_ptr;
+      char * ln_ptr;
 #endif
 } port;
 

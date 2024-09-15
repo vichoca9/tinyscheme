@@ -89,7 +89,7 @@ extern "C" {
 #endif
 
 #ifndef USE_STRCASECMP   /* stricmp for Unix */
-# define USE_STRCASECMP 0
+# define USE_STRCASECMP 1
 #endif
 
 #ifndef USE_STRLWR

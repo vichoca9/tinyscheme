@@ -35,7 +35,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 /* From Lua's*/
-#define ts_readline(b,p) (((b)=readline(p)) != NULL)
+#define ts_readline(b,p) ((b)=readline(p))
 #define ts_saveline(line) (add_history(line))
 #define ts_freeline(b) (free(b))
 #endif
@@ -360,7 +360,7 @@ static port *port_rep_from_string(scheme *sc, char *start, char *past_the_end, i
 static void port_close(scheme *sc, pointer p, int flag);
 static void mark(pointer a);
 static void gc(scheme *sc, pointer a, pointer b);
-static int basic_inchar(port *pt);
+static int basic_inchar(port *pt, int interactive);
 static int inchar(scheme *sc);
 static void backchar(scheme *sc, int c);
 static char   *readstr_upto(scheme *sc, char *delim);
@@ -1418,6 +1418,7 @@ static port *port_rep_from_file(scheme *sc, FILE *f, int prop)
     if (pt == NULL) {
         return NULL;
     }
+    pt->ln_ptr=NULL;
     pt->kind = port_file | prop;
     pt->rep.stdio.file = f;
     pt->rep.stdio.closeit = 0;
@@ -1439,6 +1440,7 @@ static port *port_rep_from_string(scheme *sc, char *start, char *past_the_end, i
   if(pt==0) {
     return 0;
   }
+  pt->ln_ptr=NULL;
   pt->kind=port_string|prop;
   pt->rep.string.start=start;
   pt->rep.string.curr=start;
@@ -1514,7 +1516,7 @@ static int inchar(scheme *sc) {
   pt = sc->inport->_object._port;
   if(pt->kind & port_saw_EOF)
     { return EOF; }
-  c = basic_inchar(pt);
+  c = basic_inchar(pt, sc->interactive_repl);
   if(c == EOF && sc->inport == sc->loadport) {
     /* Instead, set port_saw_EOF */
     pt->kind |= port_saw_EOF;
@@ -1526,9 +1528,9 @@ static int inchar(scheme *sc) {
   return c;
 }
 
-static int basic_inchar(port *pt) {
+static int basic_inchar(port *pt, int interactive) {
 #ifdef USE_READLINE
-   if(pt->ln_ptr != NULL){
+   if(pt->ln_ptr != NULL && interactive){
      return *pt->ln_ptr++;
    }
 #endif
