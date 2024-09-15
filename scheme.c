@@ -108,6 +108,11 @@ static const char *strlwr(char *s) {
 # define prompt "ts> "
 #endif
 
+#ifdef INITFILE
+#define InitFile INITFILE
+#endif
+
+/* Blame hardcoded paths! */
 #ifndef InitFile
 # define InitFile "/usr/lib/tinyscheme/init.scm"
 #endif

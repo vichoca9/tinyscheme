@@ -1,6 +1,8 @@
 # Makefile for TinyScheme
 # Time-stamp: <2002-06-24 14:13:27 gildea>
 
+#FIXME: add other platforms install's
+
 # Windows/2000
 #CC = cl -nologo
 #DEBUG= -W3 -Z7 -MD
@@ -18,8 +20,9 @@
 #AR= echo
 
 # Unix, generally
-CC = gcc -pedantic -Wall -Wextra
-DEBUG=-g -Wall -Wno-char-subscripts -O
+CC = gcc -fpic -pedantic
+#DEBUG=-g -Wall -Wno-char-subscripts -O
+DEBUG=-Os
 Osuf=o
 SOsuf=so
 LIBsuf=a
@@ -28,11 +31,17 @@ LIBPREFIX=lib
 OUT = -o $@
 RM= -rm -f
 AR= ar crs
+CP= cp
+MKD= mkdir -p
+INSTALL_BIN_DIR = /usr/bin
+INSTALL_LIB_DIR = /usr/lib/tinyscheme
+INSTALL_INIT_FILE = "/usr/lib/tinyscheme/init.scm"
 
 # Linux
 LD = gcc
-LDFLAGS = -shared
-DEBUG=-g -Wno-char-subscripts -O
+LDFLAGS = -fpic -shared
+#DEBUG=-g -Wno-char-subscripts -O
+DEBUG=-Os -Wno-char-subscripts
 SYS_LIBS= -ldl -lm -lreadline
 PLATFORM_FEATURES= -DSUN_DL=1 -DUSE_READLINE=1
 
@@ -68,7 +77,7 @@ OBJS = scheme.$(Osuf) dynload.$(Osuf)
 LIBTARGET = $(LIBPREFIX)tinyscheme.$(SOsuf)
 STATICLIBTARGET = $(LIBPREFIX)tinyscheme.$(LIBsuf)
 
-all: $(LIBTARGET) $(STATICLIBTARGET) scheme$(EXE_EXT)
+all: $(LIBTARGET) $(STATICLIBTARGET) tinyscheme$(EXE_EXT)
 
 %.$(Osuf): %.c
 	$(CC) -I. -c $(DEBUG) $(FEATURES) $(DL_FLAGS) $<
@@ -76,7 +85,7 @@ all: $(LIBTARGET) $(STATICLIBTARGET) scheme$(EXE_EXT)
 $(LIBTARGET): $(OBJS)
 	$(LD) $(LDFLAGS) $(OUT) $(OBJS) $(SYS_LIBS)
 
-scheme$(EXE_EXT): $(OBJS)
+tinyscheme$(EXE_EXT): $(OBJS)
 	$(CC) -o $@ $(DEBUG) $(OBJS) $(SYS_LIBS)
 
 $(STATICLIBTARGET): $(OBJS)
@@ -86,7 +95,7 @@ $(OBJS): scheme.h scheme-private.h opdefines.h
 dynload.$(Osuf): dynload.h
 
 clean:
-	$(RM) $(OBJS) $(LIBTARGET) $(STATICLIBTARGET) scheme$(EXE_EXT)
+	$(RM) $(OBJS) $(LIBTARGET) $(STATICLIBTARGET) tinyscheme$(EXE_EXT)
 	$(RM) tinyscheme.ilk tinyscheme.map tinyscheme.pdb tinyscheme.exp
 	$(RM) scheme.ilk scheme.map scheme.pdb scheme.lib scheme.exp
 	$(RM) *~
@@ -96,3 +105,8 @@ TAGS_SRCS = scheme.h scheme.c dynload.h dynload.c
 tags: TAGS
 TAGS: $(TAGS_SRCS)
 	etags $(TAGS_SRCS)
+
+install:
+	$(CP) tinyscheme$(EXE_EXT) $(INSTALL_BIN_DIR)
+	$(MKD) $(INSTALL_LIB_DIR)
+	$(CP) init.scm $(INSTALL_LIB_DIR)
