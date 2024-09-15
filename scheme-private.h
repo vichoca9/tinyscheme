@@ -38,6 +38,9 @@ typedef struct port {
       char *curr;
     } string;
   } rep;
+#ifdef USE_READLINE
+  char * ln_ptr;
+#endif
 } port;
 
 /* cell structure */

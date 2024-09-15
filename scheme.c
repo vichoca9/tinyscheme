@@ -31,6 +31,14 @@
 #include <float.h>
 #include <ctype.h>
 
+#ifdef USE_READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+/* From Lua's*/
+#define ts_readline(b,p) (((b)=readline(p)) != NULL)
+#define ts_saveline(line) (add_history(line))
+#define ts_freeline(b) (free(b))
+#endif
 #if USE_STRCASECMP
 #include <strings.h>
 # ifndef __APPLE__
@@ -1519,6 +1527,11 @@ static int inchar(scheme *sc) {
 }
 
 static int basic_inchar(port *pt) {
+#ifdef USE_READLINE
+   if(pt->ln_ptr != NULL){
+     return *pt->ln_ptr++;
+   }
+#endif
   if(pt->kind & port_file) {
     return fgetc(pt->rep.stdio.file);
   } else {
@@ -1536,6 +1549,11 @@ static void backchar(scheme *sc, int c) {
   port *pt;
   if(c==EOF) return;
   pt=sc->inport->_object._port;
+#ifdef USE_READLINE
+  if(pt->ln_ptr != NULL){
+    --pt->ln_ptr;
+  }
+#endif
   if(pt->kind&port_file) {
     ungetc(c,pt->rep.stdio.file);
   } else {
@@ -2524,7 +2542,12 @@ static pointer opexe_0(scheme *sc, enum scheme_opcodes op) {
        sc->envir = sc->global_env;
        dump_stack_reset(sc);
        putstr(sc,"\n");
+#ifdef USE_READLINE
+       ts_readline(sc->inport->_object._port->ln_ptr,prompt);
+       ts_saveline(sc->inport->_object._port->ln_ptr);
+#else
        putstr(sc,prompt);
+#endif
      }
 
        /* Set up another iteration of REPL */

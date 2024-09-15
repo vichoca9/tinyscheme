@@ -33,8 +33,8 @@ AR= ar crs
 LD = gcc
 LDFLAGS = -shared
 DEBUG=-g -Wno-char-subscripts -O
-SYS_LIBS= -ldl -lm
-PLATFORM_FEATURES= -DSUN_DL=1
+SYS_LIBS= -ldl -lm -lreadline
+PLATFORM_FEATURES= -DSUN_DL=1 -DUSE_READLINE=1
 
 # Cygwin
 #PLATFORM_FEATURES = -DUSE_STRLWR=0
