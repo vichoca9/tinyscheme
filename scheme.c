@@ -142,7 +142,8 @@ enum scheme_types {
 /* ADJ is enough slack to align cells in a TYPE_BITS-bit boundary */
 #define ADJ 32
 #define TYPE_BITS 5
-#define T_MASKTYPE      31    /* 0000000000011111 */
+/*FIXME: Why this is 5 bits, given scheme_types < 16 ????*/
+#define T_MASKTYPE     31    /* 0000000000011111 */
 #define T_SYNTAX      4096    /* 0001000000000000 */
 #define T_IMMUTABLE   8192    /* 0010000000000000 */
 #define T_ATOM       16384    /* 0100000000000000 */   /* only for gc */
@@ -190,10 +191,12 @@ INTERFACE static pointer vector_elem(pointer vec, int ielem);
 INTERFACE static pointer set_vector_elem(pointer vec, int ielem, pointer a);
 INTERFACE INLINE int is_number(pointer p)    { return (type(p)==T_NUMBER); }
 INTERFACE INLINE int is_integer(pointer p) {
-  if (!is_number(p))
+  if (!is_number(p)){
       return 0;
-  if (num_is_integer(p) || (double)ivalue(p) == rvalue(p))
+     }
+  if (num_is_integer(p) || ((double)ivalue(p) == rvalue(p))){
       return 1;
+     }
   return 0;
 }
 
@@ -208,8 +211,8 @@ INTERFACE long ivalue(pointer p)      { return (num_is_integer(p)?(p)->_object._
 INTERFACE double rvalue(pointer p)    { return (!num_is_integer(p)?(p)->_object._number.value.rvalue:(double)(p)->_object._number.value.ivalue); }
 #define ivalue_unchecked(p)       ((p)->_object._number.value.ivalue)
 #define rvalue_unchecked(p)       ((p)->_object._number.value.rvalue)
-#define set_num_integer(p)   (p)->_object._number.is_fixnum=1;
-#define set_num_real(p)      (p)->_object._number.is_fixnum=0;
+#define set_num_integer(p)   ((p)->_object._number.is_fixnum=1)
+#define set_num_real(p)      ((p)->_object._number.is_fixnum=0)
 INTERFACE  long charvalue(pointer p)  { return ivalue_unchecked(p); }
 
 INTERFACE INLINE int is_port(pointer p)     { return (type(p)==T_PORT); }
@@ -3468,7 +3471,8 @@ static pointer opexe_2(scheme *sc, enum scheme_opcodes op) {
           str=strvalue(car(sc->args));
 
           x=cadr(sc->args);
-          if (is_integer(x)) {
+          printf("%d\n",x->_object._number.is_fixnum);
+          if (!is_integer(x)) { /*FIXME: this was set off by some reason???*/
                Error_1(sc,"string-ref: index must be exact:",x);
           }
 
@@ -3492,7 +3496,7 @@ static pointer opexe_2(scheme *sc, enum scheme_opcodes op) {
           str=strvalue(car(sc->args));
 
           x=cadr(sc->args);
-          if (is_integer(x)) {
+          if (!is_integer(x)) { /*FIXME: off before (???)*/
                Error_1(sc,"string-set!: index must be exact:",x);
           }
 
@@ -3598,7 +3602,7 @@ static pointer opexe_2(scheme *sc, enum scheme_opcodes op) {
           int index;
 
           x=cadr(sc->args);
-          if (is_integer(x)) {
+          if (!is_integer(x)) { /*FIXME: off before (???)*/
                Error_1(sc,"vector-ref: index must be exact:",x);
           }
           index=ivalue(x);
@@ -3619,7 +3623,7 @@ static pointer opexe_2(scheme *sc, enum scheme_opcodes op) {
           }
 
           x=cadr(sc->args);
-          if (is_integer(x)) {
+          if (!is_integer(x)) { /*FIXME: off before (??)*/
                Error_1(sc,"vector-set!: index must be exact:",x);
           }
 
