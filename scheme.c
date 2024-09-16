@@ -79,11 +79,15 @@
 #include <stdlib.h>
 
 /* Assume a+bi, or a+bj */
-double complex atocmplx(char * q){
+DECIMAL complex atocmplx(char * q){
 	//float complex z;
-	double real,imag;
+	DECIMAL real,imag;
 	char unit;
+	#ifdef USE_DOUBLE_COMPLEX
 	sscanf(q,"%lf+%lf%[ij]",&real,&imag,&unit);
+	#else
+	sscanf(q,"%f+%f%[ij]",&real,&imag,&unit);
+	#endif
 	return real+imag*I;
 }
 
@@ -1054,7 +1058,7 @@ INTERFACE pointer mk_real(scheme *sc, double n) {
   return (x);
 }
 
-INTERFACE pointer mk_complex(scheme *sc, double complex n) {
+INTERFACE pointer mk_complex(scheme *sc, DECIMAL complex n) {
   pointer x = get_cell(sc,sc->NIL, sc->NIL);
 
   typeflag(x) = (T_NUMBER | T_ATOM);
@@ -2075,10 +2079,14 @@ static void atom2str(scheme *sc, pointer l, int f, char **pp, int *plen) {
                    snprintf(p, STRBUFFSIZE, "%ld", ivalue_unchecked(l));
               }
               else if(num_is_complex(l)){
-             	   double r,c;
+             	   DECIMAL r,c;
              	   r=creal(cvalue_unchecked(l));
              	   c=cimag(cvalue_unchecked(l));
+             	   #ifdef USE_DOUBLE_COMPLEX
              	   snprintf(p, STRBUFFSIZE, "%.10lg+%.10lgi",r,c);
+             	   #else
+             	   snprintf(p, STRBUFFSIZE, "%.10g+%.10gi",r,c);
+             	   #endif
               }else {
                    snprintf(p, STRBUFFSIZE, "%.10g", rvalue_unchecked(l));
                    /* r5rs says there must be a '.' (unless 'e'?) */

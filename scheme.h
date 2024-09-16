@@ -57,6 +57,7 @@ extern "C" {
 
 #ifndef USE_MATH         /* If math support is needed */
 # define USE_MATH 1
+# define USE_DOUBLE_COMPLEX 0 /* Use double or float complex (16 vs 8 bytes)*/
 #endif
 
 #ifndef USE_CHAR_CLASSIFIERS  /* If char classifiers are needed */
@@ -119,6 +120,12 @@ typedef void * (*func_alloc)(size_t);
 typedef void (*func_dealloc)(void *);
 
 #include <complex.h>
+
+#ifdef USE_DOUBLE_COMPLEX
+#define DECIMAL double
+#else
+#define DECIMAL float
+#endif
 /* num, for generic arithmetic */
 typedef struct num {
      char is_fixnum;
@@ -126,7 +133,7 @@ typedef struct num {
      union {
           long ivalue;
           double rvalue;
-          double complex cvalue;
+          DECIMAL complex cvalue;
      } value;
 } num;
 
