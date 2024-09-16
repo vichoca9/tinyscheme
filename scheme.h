@@ -118,12 +118,15 @@ typedef struct cell *pointer;
 typedef void * (*func_alloc)(size_t);
 typedef void (*func_dealloc)(void *);
 
+#include <complex.h>
 /* num, for generic arithmetic */
 typedef struct num {
      char is_fixnum;
+     char is_complex;
      union {
           long ivalue;
           double rvalue;
+          double complex cvalue;
      } value;
 } num;
 

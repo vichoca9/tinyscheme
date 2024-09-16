@@ -25,7 +25,9 @@
 #endif
 #if USE_MATH
 # include <math.h>
+# include <complex.h>
 #endif
+
 
 #include <limits.h>
 #include <float.h>
@@ -75,6 +77,15 @@
 
 #include <string.h>
 #include <stdlib.h>
+
+/* Assume a+bi, or a+bj */
+double complex atocmplx(char * q){
+	//float complex z;
+	double real,imag;
+	char unit;
+	sscanf(q,"%lf+%lf%[ij]",&real,&imag,&unit);
+	return real+imag*I;
+}
 
 #ifdef __APPLE__
 static int stricmp(const char *s1, const char *s2)
@@ -136,7 +147,8 @@ enum scheme_types {
   T_MACRO=12,
   T_PROMISE=13,
   T_ENVIRONMENT=14,
-  T_LAST_SYSTEM_TYPE=14
+  T_LAST_SYSTEM_TYPE=14,
+  T_COMPLEX=18
 };
 
 /* ADJ is enough slack to align cells in a TYPE_BITS-bit boundary */
@@ -172,6 +184,9 @@ static int is_zero_double(double x);
 static INLINE int num_is_integer(pointer p) {
   return ((p)->_object._number.is_fixnum);
 }
+static INLINE int num_is_complex(pointer p) {
+  return ((p)->_object._number.is_complex);
+}
 
 static num num_zero;
 static num num_one;
@@ -189,19 +204,19 @@ INTERFACE INLINE int is_vector(pointer p)    { return (type(p)==T_VECTOR); }
 INTERFACE static void fill_vector(pointer vec, pointer obj);
 INTERFACE static pointer vector_elem(pointer vec, int ielem);
 INTERFACE static pointer set_vector_elem(pointer vec, int ielem, pointer a);
-INTERFACE INLINE int is_number(pointer p)    { return (type(p)==T_NUMBER); }
+INTERFACE INLINE int is_number(pointer p)    { return ((type(p)==T_NUMBER)); }
 INTERFACE INLINE int is_integer(pointer p) {
   if (!is_number(p)){
       return 0;
      }
-  if (num_is_integer(p) || ((double)ivalue(p) == rvalue(p))){
+  if (num_is_integer(p) || ((double)ivalue(p) == rvalue(p) && !num_is_complex(p))){
       return 1;
      }
   return 0;
 }
 
 INTERFACE INLINE int is_real(pointer p) {
-  return is_number(p) && (!(p)->_object._number.is_fixnum);
+  return is_number(p) && (!(p)->_object._number.is_fixnum && !num_is_complex(p));
 }
 
 INTERFACE INLINE int is_character(pointer p) { return (type(p)==T_CHARACTER); }
@@ -211,8 +226,11 @@ INTERFACE long ivalue(pointer p)      { return (num_is_integer(p)?(p)->_object._
 INTERFACE double rvalue(pointer p)    { return (!num_is_integer(p)?(p)->_object._number.value.rvalue:(double)(p)->_object._number.value.ivalue); }
 #define ivalue_unchecked(p)       ((p)->_object._number.value.ivalue)
 #define rvalue_unchecked(p)       ((p)->_object._number.value.rvalue)
+#define cvalue_unchecked(p)       ((p)->_object._number.value.cvalue)
 #define set_num_integer(p)   ((p)->_object._number.is_fixnum=1)
 #define set_num_real(p)      ((p)->_object._number.is_fixnum=0)
+#define clear_num_complex(p) ((p)->_object._number.is_complex=0)
+#define set_num_complex(p)   ((p)->_object._number.is_complex=1)
 INTERFACE  long charvalue(pointer p)  { return ivalue_unchecked(p); }
 
 INTERFACE INLINE int is_port(pointer p)     { return (type(p)==T_PORT); }
@@ -403,8 +421,20 @@ static void assign_proc(scheme *sc, enum scheme_opcodes, char *name);
 static num num_add(num a, num b) {
  num ret;
  ret.is_fixnum=a.is_fixnum && b.is_fixnum;
+ ret.is_complex=a.is_complex || b.is_complex;
  if(ret.is_fixnum) {
      ret.value.ivalue= a.value.ivalue+b.value.ivalue;
+ }
+ else if(ret.is_complex) {
+     if(!a.is_complex){
+        ret.value.cvalue=num_rvalue(a)+b.value.cvalue;
+     }
+     else if(!b.is_complex){
+     	ret.value.cvalue=a.value.cvalue+num_rvalue(b);
+     }
+     else{
+         ret.value.cvalue= a.value.cvalue+b.value.cvalue;
+     }
  } else {
      ret.value.rvalue=num_rvalue(a)+num_rvalue(b);
  }
@@ -414,9 +444,21 @@ static num num_add(num a, num b) {
 static num num_mul(num a, num b) {
  num ret;
  ret.is_fixnum=a.is_fixnum && b.is_fixnum;
+ ret.is_complex=a.is_complex || b.is_complex;
  if(ret.is_fixnum) {
      ret.value.ivalue= a.value.ivalue*b.value.ivalue;
- } else {
+ }else if(ret.is_complex) {
+     if(!a.is_complex){
+        ret.value.cvalue=num_rvalue(a)*b.value.cvalue;
+     }
+     else if(!b.is_complex){
+     	ret.value.cvalue=a.value.cvalue*num_rvalue(b);
+     }
+     else{
+        ret.value.cvalue=a.value.cvalue*b.value.cvalue;
+     }
+ }
+  else {
      ret.value.rvalue=num_rvalue(a)*num_rvalue(b);
  }
  return ret;
@@ -424,10 +466,22 @@ static num num_mul(num a, num b) {
 
 static num num_div(num a, num b) {
  num ret;
+ ret.is_complex=a.is_complex || b.is_complex;
  ret.is_fixnum=a.is_fixnum && b.is_fixnum && a.value.ivalue%b.value.ivalue==0;
  if(ret.is_fixnum) {
      ret.value.ivalue= a.value.ivalue/b.value.ivalue;
- } else {
+ } else if(ret.is_complex) {
+     if(!a.is_complex){
+        ret.value.cvalue=num_rvalue(a)/b.value.cvalue;
+     }
+     else if(!b.is_complex){
+     	ret.value.cvalue=a.value.cvalue/num_rvalue(b);
+     }
+     else{
+        ret.value.cvalue=a.value.cvalue/b.value.cvalue;
+     }
+    }
+ else {
      ret.value.rvalue=num_rvalue(a)/num_rvalue(b);
  }
  return ret;
@@ -447,9 +501,21 @@ static num num_intdiv(num a, num b) {
 static num num_sub(num a, num b) {
  num ret;
  ret.is_fixnum=a.is_fixnum && b.is_fixnum;
+ ret.is_complex=a.is_complex || b.is_complex;
  if(ret.is_fixnum) {
      ret.value.ivalue= a.value.ivalue-b.value.ivalue;
- } else {
+ } else if(ret.is_complex) {
+     if(!a.is_complex){
+        ret.value.cvalue=num_rvalue(a)-b.value.cvalue;
+     }
+     else if(!b.is_complex){
+     	ret.value.cvalue=a.value.cvalue-num_rvalue(b);
+     }
+     else{
+        ret.value.cvalue=a.value.cvalue-b.value.cvalue;
+     }
+ }
+ else {
      ret.value.rvalue=num_rvalue(a)-num_rvalue(b);
  }
  return ret;
@@ -494,9 +560,21 @@ static num num_mod(num a, num b) {
 static int num_eq(num a, num b) {
  int ret;
  int is_fixnum=a.is_fixnum && b.is_fixnum;
+ int is_complex=a.is_complex || b.is_complex;
  if(is_fixnum) {
      ret= a.value.ivalue==b.value.ivalue;
- } else {
+ } else if(is_complex) {
+     if(!a.is_complex){
+        ret=0;
+     }
+     else if(!b.is_complex){
+     	ret=0;
+     }
+     else{
+        ret= a.value.cvalue==b.value.cvalue;
+     }
+ }
+ else {
      ret=num_rvalue(a)==num_rvalue(b);
  }
  return ret;
@@ -780,6 +858,7 @@ static pointer get_vector_object(scheme *sc, int len, pointer init)
   typeflag(cells) = (T_VECTOR | T_ATOM);
   ivalue_unchecked(cells)=len;
   set_num_integer(cells);
+  clear_num_complex(cells);
   fill_vector(cells,init);
   push_recent_alloc(sc, cells, sc->NIL);
   return cells;
@@ -950,6 +1029,7 @@ INTERFACE pointer mk_character(scheme *sc, int c) {
   typeflag(x) = (T_CHARACTER | T_ATOM);
   ivalue_unchecked(x)= c;
   set_num_integer(x);
+  clear_num_complex(x);
   return (x);
 }
 
@@ -960,6 +1040,7 @@ INTERFACE pointer mk_integer(scheme *sc, long num) {
   typeflag(x) = (T_NUMBER | T_ATOM);
   ivalue_unchecked(x)= num;
   set_num_integer(x);
+  clear_num_complex(x);
   return (x);
 }
 
@@ -969,13 +1050,29 @@ INTERFACE pointer mk_real(scheme *sc, double n) {
   typeflag(x) = (T_NUMBER | T_ATOM);
   rvalue_unchecked(x)= n;
   set_num_real(x);
+  clear_num_complex(x);
+  return (x);
+}
+
+INTERFACE pointer mk_complex(scheme *sc, double complex n) {
+  pointer x = get_cell(sc,sc->NIL, sc->NIL);
+
+  typeflag(x) = (T_NUMBER | T_ATOM);
+  //printf("%f+%fi\n",creal(n),cimag(n));
+  cvalue_unchecked(x)= n;/*FIXME COMPLEX:*/
+  set_num_real(x);
+  set_num_complex(x);
   return (x);
 }
 
 static pointer mk_number(scheme *sc, num n) {
  if(n.is_fixnum) {
      return mk_integer(sc,n.value.ivalue);
- } else {
+ }
+ else if(n.is_complex){
+     return mk_complex(sc,n.value.cvalue);
+ }
+ else {
      return mk_real(sc,n.value.rvalue);
  }
 }
@@ -1090,8 +1187,9 @@ INTERFACE pointer gensym(scheme *sc) {
 static pointer mk_atom(scheme *sc, char *q) {
      char    c, *p;
      int has_dec_point=0;
+     int has_imag=0;
      int has_fp_exp = 0;
-
+     
 #if USE_COLON_HOOK
      if((p=strstr(q,"::"))!=0) {
           *p=0;
@@ -1126,7 +1224,7 @@ static pointer mk_atom(scheme *sc, char *q) {
      }
 
      for ( ; (c = *p) != 0; ++p) {
-          if (!isdigit(c)) {
+          if (!isdigit(c) ) {
                if(c=='.') {
                     if(!has_dec_point) {
                          has_dec_point=1;
@@ -1143,11 +1241,29 @@ static pointer mk_atom(scheme *sc, char *q) {
                           }
                        }
                }
-               return (mk_symbol(sc, strlwr(q)));
+                else if ((c == 'i') || (c == 'j')){
+                       if(!has_imag){
+                          has_imag=1;
+
+               		p++;
+                          if ((*p == '-') || (*p == '+') || isdigit(*p)) {
+                             continue;
+                          }
+                       }
+               }
+               if(!has_imag && (c != '+' && c != '-' && c!='.')){
+               	return (mk_symbol(sc, strlwr(q)));
+               }
           }
      }
      if(has_dec_point) {
+     	 if(has_imag){
+         return mk_complex(sc,atocmplx(q));
+     	}
           return mk_real(sc,atof(q));
+     }
+     if(has_imag){
+         return mk_complex(sc,atocmplx(q));
      }
      return (mk_integer(sc, atol(q)));
 }
@@ -1955,9 +2071,15 @@ static void atom2str(scheme *sc, pointer l, int f, char **pp, int *plen) {
      } else if (is_number(l)) {
           p = sc->strbuff;
           if (f <= 1 || f == 10) /* f is the base for numbers if > 1 */ {
-              if(num_is_integer(l)) {
+              if(num_is_integer(l) && !num_is_complex(l)) {
                    snprintf(p, STRBUFFSIZE, "%ld", ivalue_unchecked(l));
-              } else {
+              }
+              else if(num_is_complex(l)){
+             	   double r,c;
+             	   r=creal(cvalue_unchecked(l));
+             	   c=cimag(cvalue_unchecked(l));
+             	   snprintf(p, STRBUFFSIZE, "%.10lg+%.10lgi",r,c);
+              }else {
                    snprintf(p, STRBUFFSIZE, "%.10g", rvalue_unchecked(l));
                    /* r5rs says there must be a '.' (unless 'e'?) */
                    f = strcspn(p, ".e");
@@ -4563,6 +4685,7 @@ static pointer mk_proc(scheme *sc, enum scheme_opcodes op) {
      typeflag(y) = (T_PROC | T_ATOM);
      ivalue_unchecked(y) = (long) op;
      set_num_integer(y);
+     clear_num_complex(y);
      return y;
 }
 
