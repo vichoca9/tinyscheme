@@ -3,7 +3,10 @@ A R5RS *tiny* implementation. Only dependencies are C and optional
 math and readline libraries.
 
 ## How to build
-Run ```make```, see BUILDING or ```scheme.h``` for more options.
+Run `make`, see BUILDING or `scheme.h` for more options.
+
+Run `make indent` for auto code formatting. Not mandatory, but helps
+with standarization for editors.
 
 ## Implementation details
 - [X] Readline support
