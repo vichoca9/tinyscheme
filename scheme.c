@@ -238,12 +238,12 @@ INLINE num nvalue(pointer p) {
 	return ((p)->_object._number);
 }
 INTERFACE long ivalue(pointer p) {
-	return (num_is_integer(p) ? (p)->_object._number.value.ivalue : (long)(p)->_object._number.
-		value.rvalue);
+	return (num_is_integer(p) ? (p)->_object._number.value.ivalue : (long)(p)->_object.
+		_number.value.rvalue);
 }
 INTERFACE double rvalue(pointer p) {
-	return (!num_is_integer(p) ? (p)->_object._number.value.rvalue : (double)(p)->_object.
-		_number.value.ivalue);
+	return (!num_is_integer(p) ? (p)->_object._number.value.rvalue : (double)(p)->
+		_object._number.value.ivalue);
 }
 INTERFACE DECIMAL complex cvalue(pointer p) {
 	return (!num_is_complex(p) ? (DECIMAL complex)((DECIMAL) rvalue(p) + (DECIMAL) 0 * I)

@@ -89,7 +89,7 @@ tinyscheme$(EXE_EXT): $(OBJS)
 	$(CC) -o $@ $(DEBUG) $(OBJS) $(SYS_LIBS)
 
 indent:
-	indent *.c *.h -linux -brf -l100
+	indent *.c *.h -linux -brf -l100 -ut
 
 $(STATICLIBTARGET): $(OBJS)
 	$(AR) $@ $(OBJS)
