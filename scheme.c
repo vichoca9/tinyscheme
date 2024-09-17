@@ -228,6 +228,9 @@ INTERFACE INLINE char *string_value(pointer p) { return strvalue(p); }
 INLINE num nvalue(pointer p)       { return ((p)->_object._number); }
 INTERFACE long ivalue(pointer p)      { return (num_is_integer(p)?(p)->_object._number.value.ivalue:(long)(p)->_object._number.value.rvalue); }
 INTERFACE double rvalue(pointer p)    { return (!num_is_integer(p)?(p)->_object._number.value.rvalue:(double)(p)->_object._number.value.ivalue); }
+INTERFACE DECIMAL complex cvalue(pointer p){
+return (!num_is_complex(p)?(DECIMAL complex)((DECIMAL)rvalue(p)+(DECIMAL)0*I):((p)->_object._number.value.cvalue));
+}
 #define ivalue_unchecked(p)       ((p)->_object._number.value.ivalue)
 #define rvalue_unchecked(p)       ((p)->_object._number.value.rvalue)
 #define cvalue_unchecked(p)       ((p)->_object._number.value.cvalue)
@@ -2080,8 +2083,8 @@ static void atom2str(scheme *sc, pointer l, int f, char **pp, int *plen) {
               }
               else if(num_is_complex(l)){
              	   DECIMAL r,c;
-             	   r=creal(cvalue_unchecked(l));
-             	   c=cimag(cvalue_unchecked(l));
+             	   r=c_real(cvalue_unchecked(l));
+             	   c=c_imag(cvalue_unchecked(l));
              	   #ifdef USE_DOUBLE_COMPLEX
              	   snprintf(p, STRBUFFSIZE, "%.10lg+%.10lgi",r,c);
              	   #else
@@ -3284,43 +3287,85 @@ static pointer opexe_2(scheme *sc, enum scheme_opcodes op) {
 
      case OP_EXP:
           x=car(sc->args);
+          if(num_is_complex(x)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_exp(cvalue_unchecked(x))));
+          }
+          else
           s_return(sc, mk_real(sc, exp(rvalue(x))));
 
      case OP_LOG:
           x=car(sc->args);
+          if(num_is_complex(x)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_log(cvalue_unchecked(x))));
+          }
+          else
           s_return(sc, mk_real(sc, log(rvalue(x))));
 
      case OP_SIN:
           x=car(sc->args);
+          if(num_is_complex(x)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_sin(cvalue_unchecked(x))));
+          }
+          else
           s_return(sc, mk_real(sc, sin(rvalue(x))));
 
      case OP_COS:
           x=car(sc->args);
+          if(num_is_complex(x)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_cos(cvalue_unchecked(x))));
+          }
+          else
           s_return(sc, mk_real(sc, cos(rvalue(x))));
 
      case OP_TAN:
           x=car(sc->args);
+          if(num_is_complex(x)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_tan(cvalue_unchecked(x))));
+          }
+          else
           s_return(sc, mk_real(sc, tan(rvalue(x))));
 
      case OP_ASIN:
           x=car(sc->args);
+          if(num_is_complex(x)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_asin(cvalue_unchecked(x))));
+          }
+          else
           s_return(sc, mk_real(sc, asin(rvalue(x))));
 
      case OP_ACOS:
           x=car(sc->args);
+          if(num_is_complex(x)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_acos(cvalue_unchecked(x))));
+          }
+          else
           s_return(sc, mk_real(sc, acos(rvalue(x))));
 
      case OP_ATAN:
           x=car(sc->args);
           if(cdr(sc->args)==sc->NIL) {
-               s_return(sc, mk_real(sc, atan(rvalue(x))));
+               if(num_is_complex(x)){/*FIXME: add checks!*/
+          	  s_return(sc, mk_complex(sc, c_atan(cvalue_unchecked(x))));
+               }
+               else
+                  s_return(sc, mk_real(sc, atan(rvalue(x))));
           } else {
                pointer y=cadr(sc->args);
+               if(num_is_complex(x) || num_is_complex(y)){
+                  Error_1(sc,"Argument must be real:",y);
+                  Error_1(sc,"Argument must be real:",x);
+               }
+               else{
                s_return(sc, mk_real(sc, atan2(rvalue(x),rvalue(y))));
+               }
           }
 
      case OP_SQRT:
           x=car(sc->args);
+          if(num_is_complex(x)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_sqrt(cvalue_unchecked(x))));
+          }
+          else
           s_return(sc, mk_real(sc, sqrt(rvalue(x))));
 
      case OP_EXPT: {
@@ -3328,42 +3373,59 @@ static pointer opexe_2(scheme *sc, enum scheme_opcodes op) {
           int real_result=1;
           pointer y=cadr(sc->args);
           x=car(sc->args);
-          if (num_is_integer(x) && num_is_integer(y))
-             real_result=0;
-          /* This 'if' is an R5RS compatibility fix. */
-          /* NOTE: Remove this 'if' fix for R6RS.    */
-          if (rvalue(x) == 0 && rvalue(y) < 0) {
-             result = 0.0;
-          } else {
-             result = pow(rvalue(x),rvalue(y));
+          if(num_is_complex(x) || num_is_complex(y)){/*FIXME: add checks!*/
+          	s_return(sc, mk_complex(sc, c_expt(cvalue(x),cvalue(y))));
           }
-          /* Before returning integer result make sure we can. */
-          /* If the test fails, result is too big for integer. */
-          if (!real_result)
-          {
-            long result_as_long = (long)result;
-            if (result != (double)result_as_long)
-              real_result = 1;
+          else{
+           if (num_is_integer(x) && num_is_integer(y))
+              real_result=0;
+           /* This 'if' is an R5RS compatibility fix. */
+           /* NOTE: Remove this 'if' fix for R6RS.    */
+           if (rvalue(x) == 0 && rvalue(y) < 0) {
+              result = 0.0;
+           } else {
+              result = pow(rvalue(x),rvalue(y));
+           }
+           /* Before returning integer result make sure we can. */
+           /* If the test fails, result is too big for integer. */
+           if (!real_result)
+           {
+             long result_as_long = (long)result;
+             if (result != (double)result_as_long)
+               real_result = 1;
+           }
+           if (real_result) {
+              s_return(sc, mk_real(sc, result));
+           } else {
+              s_return(sc, mk_integer(sc, result));
+           }
           }
-          if (real_result) {
-             s_return(sc, mk_real(sc, result));
-          } else {
-             s_return(sc, mk_integer(sc, result));
-          }
-     }
+      }
 
      case OP_FLOOR:
           x=car(sc->args);
+          if(num_is_complex(x)){
+             Error_1(sc,"Argument must be real:",x);
+          }
+          else
           s_return(sc, mk_real(sc, floor(rvalue(x))));
 
      case OP_CEILING:
           x=car(sc->args);
+          if(num_is_complex(x)){
+             Error_1(sc,"Argument must be real:",x);
+          }
+          else
           s_return(sc, mk_real(sc, ceil(rvalue(x))));
 
      case OP_TRUNCATE : {
           double rvalue_of_x ;
           x=car(sc->args);
           rvalue_of_x = rvalue(x) ;
+          if(num_is_complex(x)){
+             Error_1(sc,"Argument must be real:",x);
+          }
+          else
           if (rvalue_of_x > 0) {
             s_return(sc, mk_real(sc, floor(rvalue_of_x)));
           } else {
@@ -3373,9 +3435,56 @@ static pointer opexe_2(scheme *sc, enum scheme_opcodes op) {
 
      case OP_ROUND:
         x=car(sc->args);
+        if(num_is_complex(x)){
+             Error_1(sc,"Argument must be real:",x);
+          }
+          else{
         if (num_is_integer(x))
             s_return(sc, x);
         s_return(sc, mk_real(sc, round_per_R5RS(rvalue(x))));
+        }
+
+     case OP_ANGLE:
+        x=car(sc->args);
+        if(is_real(x) || num_is_integer(x)){
+           s_return(sc, mk_real(sc, 0.0));
+        }
+        else
+        s_return(sc, mk_real(sc, c_arg(cvalue(x))));
+
+     case OP_MAGNITUDE: /*FIXME: add checks???*/
+        x=car(sc->args);
+        s_return(sc, mk_real(sc, c_abs(cvalue(x))));
+
+     case OP_REAL_PART:
+        x=car(sc->args);
+        s_return(sc, mk_real(sc, c_real(cvalue(x))));
+
+     case OP_IMAG_PART:
+        x=car(sc->args);
+        s_return(sc, mk_real(sc, c_imag(cvalue(x))));
+
+     case OP_RECTANGULAR:
+        x=car(sc->args);
+        if(num_is_complex(x)){
+           Error_1(sc,"Argument must be real:",x);
+        }
+        pointer y=cadr(sc->args);
+        if(num_is_complex(y)){
+           Error_1(sc,"Argument must be real:",y);
+        }
+        s_return(sc, mk_complex(sc, (DECIMAL)rvalue(x)+(DECIMAL)rvalue(y)*I));
+
+      case OP_POLAR:
+        x=car(sc->args);
+        if(num_is_complex(x)){
+           Error_1(sc,"Argument must be real:",x);
+        }
+        y=cadr(sc->args);
+        if(num_is_complex(y)){
+           Error_1(sc,"Argument must be real:",y);
+        }
+        s_return(sc, mk_complex(sc, (DECIMAL)rvalue(x)*c_exp((DECIMAL)0.0+(DECIMAL)rvalue(y)*I)));
 #endif
 
      case OP_ADD:        /* + */

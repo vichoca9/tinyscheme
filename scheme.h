@@ -57,7 +57,6 @@ extern "C" {
 
 #ifndef USE_MATH         /* If math support is needed */
 # define USE_MATH 1
-# define USE_DOUBLE_COMPLEX 0 /* Use double or float complex (16 vs 8 bytes)*/
 #endif
 
 #ifndef USE_CHAR_CLASSIFIERS  /* If char classifiers are needed */
@@ -120,6 +119,40 @@ typedef void * (*func_alloc)(size_t);
 typedef void (*func_dealloc)(void *);
 
 #include <complex.h>
+
+
+# ifndef USE_DOUBLE_COMPLEX /* Use double or float complex (16 vs 8 bytes)*/
+//# define USE_DOUBLE_COMPLEX 0
+# define c_imag cimagf
+# define c_real crealf
+# define c_exp cexpf
+# define c_log clogf
+# define c_sin csinf
+# define c_cos ccosf
+# define c_tan ctanf
+# define c_asin casinf
+# define c_acos cacosf
+# define c_atan catanf
+# define c_sqrt csqrtf
+# define c_expt cpowf
+# define c_abs cabsf
+# define c_arg cargf
+#else
+# define c_imag cimag
+# define c_real creal
+# define c_exp cexp
+# define c_log clog
+# define c_sin csin
+# define c_cos ccos
+# define c_tan ctan
+# define c_asin casin
+# define c_acos cacos
+# define c_atan catan
+# define c_sqrt csqrt
+# define c_expt cpow
+# define c_abs cabsf
+# define c_arg cargf
+#endif
 
 #ifdef USE_DOUBLE_COMPLEX
 #define DECIMAL double

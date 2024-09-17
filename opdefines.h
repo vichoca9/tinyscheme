@@ -70,6 +70,12 @@
     _OP_DEF(opexe_2, "ceiling",                        1,  1,       TST_NUMBER,                      OP_CEILING          )
     _OP_DEF(opexe_2, "truncate",                       1,  1,       TST_NUMBER,                      OP_TRUNCATE         )
     _OP_DEF(opexe_2, "round",                          1,  1,       TST_NUMBER,                      OP_ROUND            )
+    _OP_DEF(opexe_2, "angle",                          1,  1,       TST_NUMBER,                      OP_ANGLE            )
+    _OP_DEF(opexe_2, "magnitude",                          1,  1,       TST_NUMBER,                      OP_MAGNITUDE            )
+    _OP_DEF(opexe_2, "real-part",                          1,  1,       TST_NUMBER,                      OP_REAL_PART            )
+    _OP_DEF(opexe_2, "imag-part",                          1,  1,       TST_NUMBER,                      OP_IMAG_PART            )
+    _OP_DEF(opexe_2, "make-rectangular",                          2,  2,       TST_NUMBER,                      OP_RECTANGULAR            )
+    _OP_DEF(opexe_2, "make-polar",                          2,  2,       TST_NUMBER,                      OP_POLAR            )
 #endif
     _OP_DEF(opexe_2, "+",                              0,  INF_ARG, TST_NUMBER,                      OP_ADD              )
     _OP_DEF(opexe_2, "-",                              1,  INF_ARG, TST_NUMBER,                      OP_SUB              )
