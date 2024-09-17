@@ -150,8 +150,8 @@ typedef void (*func_dealloc)(void *);
 # define c_atan catan
 # define c_sqrt csqrt
 # define c_expt cpow
-# define c_abs cabsf
-# define c_arg cargf
+# define c_abs cabs
+# define c_arg carg
 #endif
 
 #ifdef USE_DOUBLE_COMPLEX
