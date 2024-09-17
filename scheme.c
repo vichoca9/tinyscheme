@@ -3971,7 +3971,7 @@ static pointer opexe_3(scheme *sc, enum scheme_opcodes op) {
      case OP_INTEGERP:     /* integer? */
           s_retbool(is_integer(car(sc->args)));
      case OP_REALP:     /* real? */
-          s_retbool(is_number(car(sc->args))); /* All numbers are real */
+          s_retbool(is_real(car(sc->args))); /* All numbers are COMPLEX*/
      case OP_CHARP:     /* char? */
           s_retbool(is_character(car(sc->args)));
 #if USE_CHAR_CLASSIFIERS
