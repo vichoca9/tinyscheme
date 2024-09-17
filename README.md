@@ -7,6 +7,6 @@ Run ```make```, see BUILDING or ```scheme.h``` for more options.
 
 ## Implementation details
 - [X] Readline support
-- [ ] Full complex math as in the spec
+- [X] Full complex math as in the spec (needs TESTING)
 - [ ] Higienic macros
 - [ ] Full compliant with R5RS
