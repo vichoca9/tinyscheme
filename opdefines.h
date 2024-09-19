@@ -155,6 +155,7 @@ _OP_DEF(opexe_0, "load", 1, 1, TST_STRING, OP_LOAD)
     _OP_DEF(opexe_4, "put", 3, 3, TST_NONE, OP_PUT)
     _OP_DEF(opexe_4, "get", 2, 2, TST_NONE, OP_GET)
 #endif
+    _OP_DEF(opexe_4, "time", 0, 1, TST_NONE, OP_TIME)
     _OP_DEF(opexe_4, "quit", 0, 1, TST_NUMBER, OP_QUIT)
     _OP_DEF(opexe_4, "gc", 0, 0, 0, OP_GC)
     _OP_DEF(opexe_4, "gc-verbose", 0, 1, TST_NONE, OP_GCVERB)

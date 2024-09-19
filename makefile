@@ -43,7 +43,7 @@ LDFLAGS = -fpic -shared
 #DEBUG=-g -Wno-char-subscripts -O
 DEBUG=-Os -Wno-char-subscripts
 SYS_LIBS= -ldl -lm -lreadline
-PLATFORM_FEATURES= -DSUN_DL=1 -DUSE_READLINE=1 -DUSE_DOUBLE_COMPLEX=1
+PLATFORM_FEATURES= -DSUN_DL=1 -DUSE_READLINE=1
 
 # Cygwin
 #PLATFORM_FEATURES = -DUSE_STRLWR=0

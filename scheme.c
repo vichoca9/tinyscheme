@@ -28,6 +28,7 @@
 #include <complex.h>
 #endif
 
+#include <time.h>
 #include <limits.h>
 #include <float.h>
 #include <ctype.h>
@@ -4185,7 +4186,9 @@ static pointer opexe_4(scheme * sc, enum scheme_opcodes op) {
 			sc->retcode = ivalue(car(sc->args));
 		}
 		return (sc->NIL);
-
+	case OP_TIME:
+		//gc(sc, sc->NIL, sc->NIL);
+		s_return(sc, mk_integer(sc, clock()));
 	case OP_GC:		/* gc */
 		gc(sc, sc->NIL, sc->NIL);
 		s_return(sc, sc->T);

@@ -4,6 +4,7 @@
 #define _SCHEME_H
 
 #include <stdio.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
